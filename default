@@ -1,0 +1,30 @@
+
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /var/www/html;
+
+	server_name _;
+
+    #main web domain with nginx and php
+	location / {
+		index index.php index.html index.htm;
+        location ~* \.php$ {
+            try_files $uri =404;
+            fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+			#fastcgi_pass unix:/var/run/php-fpm/php-fpm.sock;
+            include fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+    }
+
+	#subfolder on domain web with node js
+	location /store/ {
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_pass         "http://127.0.0.1:8000";
+		rewrite ^/store/(.*)$ /$1 break;
+    }
+
+}
